@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        background-color: #f3f4f6;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+
+      .content {
+        background-color: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      }
+
+      .content p {
+        line-height: 1.6;
+        font-size: 16px;
+        margin-bottom: 15px;
+      }
+
+      .content strong {
+        font-size: 20px;
+        color: #1d4ed8;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      .footer a {
+        color: #1d4ed8;
+        text-decoration: none;
+      }
+    </style>
+    <title>Your OTP - Debo Coworking</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="content">
+        <p>Hi <%= user.name %>,</p>
+        <p>
+          Here is your new OTP. Please use it to complete your authentication:
+        </p>
+        <strong><%= otp %></strong>
+        <p>
+          If you didn't request this, please ignore this email. The OTP will
+          expire in 10 minutes.
+        </p>
+      </div>
+      <div class="footer">
+        <p>Best regards,</p>
+        <p>Debo Coworking Team</p>
+      </div>
+    </div>
+  </body>
+</html>
