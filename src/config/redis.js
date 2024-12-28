@@ -1,11 +1,19 @@
 import Redis from "redis";
 import dotenv from "dotenv";
 dotenv.config();
+
+const redisUrl = process.env.REDIS_HOST || "redis://localhost:6379";
+
 const client = Redis.createClient({
-  url: `redis://${process.env.REDIS_HOST || "redis"}:${
-    process.env.REDIS_PORT || 6379
-  }`,
-  // "redis://127.0.0.1:6379",
+  url: redisUrl,
+  socket: {
+    reconnectStrategy: (retries) => {
+      if (retries >= 10) {
+        return new Error("Retry attempts exhausted");
+      }
+      return Math.min(retries * 50, 500); // Retry delay
+    },
+  },
 });
 
 client.on("error", function (error) {
