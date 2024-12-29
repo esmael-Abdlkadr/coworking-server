@@ -1,38 +1,55 @@
 import dotenv from "dotenv";
-dotenv.config();
 import mongoose from "mongoose";
 import app from "./app.js";
 import logger from "./src/config/logger.js";
 import { initializeSocket } from "./socket.js";
 import { connectRedis } from "./src/config/redis.js";
 
-// handle uncaught exception.
+dotenv.config();
+
+// handle uncaught exception
 process.on("uncaughtException", (err) => {
   logger.error("UNCAUGHT EXCEPTION! 💥 Shutting down...", { error: err });
   process.exit(1);
 });
 
-// mongoose connect.
-mongoose
-  .connect(process.env.MONGO_URL)
-  .then(() => {
-    console.log("MongoDB connected!");
-  })
-  .catch((err) => {
-    console.log(err);
+// Connect to MongoDB
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URL);
+    logger.info("MongoDB connected successfully!");
+  } catch (err) {
+    logger.error("MongoDB connection error:", err);
+    process.exit(1);
+  }
+};
+
+const startServer = async () => {
+  await connectDB();
+  await connectRedis();
+
+  const port = process.env.PORT || 3000;
+
+  const server = app.listen(port, "0.0.0.0", () => {
+    logger.info(`Server is running on port ${port}`);
   });
 
-const port = process.env.PORT || 3000;
-const server = app.listen(port, () => {
-  logger.info(`Server is running on port ${port}`);
-});
+  // Initialize Socket.IO
+  initializeSocket(server);
 
-// Initialize Socket.IO
-initializeSocket(server);
+  server.on("error", (error) => {
+    logger.error("Server error:", error);
+  });
 
-connectRedis();
+  process.on("unhandledRejection", (err) => {
+    logger.error("Unhandled rejection! Shutting down...", { error: err });
+    server.close(() => {
+      process.exit(1);
+    });
+  });
+};
 
-process.on("unhandledRejection", (err) => {
-  logger.error("unhandled rejection! server shut down...", { error: err });
+startServer().catch((err) => {
+  logger.error("Failed to start server:", err);
   process.exit(1);
 });
