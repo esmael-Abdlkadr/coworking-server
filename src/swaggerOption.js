@@ -22,7 +22,7 @@ const swaggerDefinition = {
   ],
   servers: [
     {
-      url: "http://localhost:5000",
+      url: "https://coworking-api-abys.onrender.com",
     },
   ],
 };
