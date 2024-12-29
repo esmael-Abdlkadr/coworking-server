@@ -32,7 +32,7 @@ const limiter = rateLimit({
 app.use(limiter);
 app.use(
   cors({
-    origin: "https://coworking-silk.vercel.app",
+    origin: "https://coworking-silk.vercel.app/",
     credentials: true,
     methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
   })
