@@ -36,8 +36,9 @@ app.use(limiter);
 app.use(
   cors({
     origin: [
-      "https://coworking-silk.vercel.app",
-      "https://coworking-silk.vercel.app/",
+      "*",
+      "https://afro-coworking-space.vercel.app",
+      "https://afro-coworking-space.vercel.app/",
       "http://localhost:5173",
     ],
     credentials: true,
