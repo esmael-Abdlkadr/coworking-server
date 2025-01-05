@@ -45,6 +45,7 @@
     "swagger-ui-express": "^5.0.1",
     "validator": "^13.12.0",
     "winston": "^3.17.0",
+    "winston-transport-sentry-node": "^3.0.0",
     "yargs": "^17.7.2",
     "zod": "^3.23.8"
   },

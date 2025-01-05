@@ -107,6 +107,9 @@ importers:
       winston:
         specifier: ^3.17.0
         version: 3.17.0
+      winston-transport-sentry-node:
+        specifier: ^3.0.0
+        version: 3.0.0(@sentry/node@8.35.0)
       yargs:
         specifier: ^17.7.2
         version: 17.7.2
@@ -2218,6 +2221,12 @@ packages:
     resolution: {integrity: sha512-UD7d8HFA2+PZsbKyaOCEy8gMh1oDtHgJh1LfgjQ4zVXmYjAT/kvz3PueITKuqDiIXQe7yzpPnxX3lNc+AhQMyw==}
     engines: {node: '>= 0.10.0'}
     hasBin: true
+
+  winston-transport-sentry-node@3.0.0:
+    resolution: {integrity: sha512-KT3peOJtKytdF/nInt7XWtqMwbc7M/O5nSACTEdCkuVxZL7d30dDQ9GNHq0evcP2p73Ztg3gAPuZnBX8Qns2QA==}
+    engines: {node: '>= 8.10.0'}
+    peerDependencies:
+      '@sentry/node': ^8.13.0
 
   winston-transport@4.9.0:
     resolution: {integrity: sha512-8drMJ4rkgaPo1Me4zD/3WLfI/zPdA9o2IipKODunnGDcuqbHwjsbB79ylv04LCGGzU0xQ6vTznOMpQGaLhhm6A==}
@@ -4502,8 +4511,7 @@ snapshots:
 
   triple-beam@1.4.1: {}
 
-  tslib@2.8.0:
-    optional: true
+  tslib@2.8.0: {}
 
   type-fest@2.19.0: {}
 
@@ -4565,6 +4573,14 @@ snapshots:
       string-width: 4.2.3
 
   window-size@0.2.0: {}
+
+  winston-transport-sentry-node@3.0.0(@sentry/node@8.35.0):
+    dependencies:
+      '@sentry/node': 8.35.0
+      triple-beam: 1.4.1
+      tslib: 2.8.0
+      winston: 3.17.0
+      winston-transport: 4.9.0
 
   winston-transport@4.9.0:
     dependencies:

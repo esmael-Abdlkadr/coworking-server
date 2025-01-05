@@ -4,9 +4,9 @@ dotenv.config();
 
 const getRedisUrl = () => {
   // If REDIS_URL is provided as an environment variable, use it directly
-  if (process.env.REDIS_URL) {
-    return process.env.REDIS_URL;
-  }
+  // if (process.env.REDIS_URL) {
+  //   return process.env.REDIS_URL;
+  // }
 
   // For local development, construct URL from host and port
   return `redis://${process.env.REDIS_HOST || "localhost"}:${

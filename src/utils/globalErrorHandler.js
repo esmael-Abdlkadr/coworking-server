@@ -1,6 +1,10 @@
 import HttpError from "./HttpError.js";
+import logger from "../config/logger.js";
 
 const errorMiddleware = (err, req, res, next) => {
+  // Log the error to Sentry
+  logger.error(err);
+
   // Set default error status and message
   let statusCode = err.statusCode || 500;
   let message = err.message || "An unexpected error occurred";

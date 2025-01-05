@@ -4,7 +4,7 @@ import {
   login,
   verifyOTP,
   protect,
-  refreshAccessToken,
+ refreshTokenHandler,
   logout,
   requestNewOtp,
   forgotPassword,
@@ -26,7 +26,7 @@ router.post("/requestNewOtp", requestNewOtp);
 router.post("/forgotPassword", forgotPassword);
 router.post("/resetPassword/:token", resetPassword);
 router.patch("/changePassword", protect, ChangePassword);
-router.post("/refreshAccessToken", protect, refreshAccessToken);
+router.post("/refreshAccessToken", protect, refreshTokenHandler);
 router.post("/logout", logout);
 
 export default router;

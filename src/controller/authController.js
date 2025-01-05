@@ -20,6 +20,7 @@ const cookieOptions = {
   sameSite: "strict",
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
 };
+
 const sendToken = async (user, res, deviceInfo, IPAddress) => {
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
@@ -142,10 +143,12 @@ const requestNewOtp = asyncHandler(async (req, res, next) => {
     message: "New OTP sent to your email",
   });
 });
+
 const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
   const IPAddress = req.ip;
   const deviceInfo = req.get("User-Agent"); // get device info from request header.
+
   if (!email || !password) {
     return next(new HttpError("Please provide email and password", 400));
   }
@@ -188,84 +191,74 @@ const login = asyncHandler(async (req, res, next) => {
   });
 
   // Add script to update Swagger UI authorization header
-  res.send(`
+  res.send(`\
     <script>
       localStorage.setItem('swagger_access_token', '${accessToken}');
       window.location.href = '/api-docs';
     </script>
   `);
 });
-const protect = asyncHandler(async (req, res, next) => {
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
-  }
-  if (!token) {
-    return next(
-      new HttpError("You are not logged in! Please login to get access", 401)
-    );
-  }
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  const user = await User.findById(decoded.id).populate("role", "name");
-  if (!user) {
-    return next(
-      new HttpError(
-        "The user belonging to this token does no longer exist",
-        401
-      )
-    );
-  }
-  req.user = user;
-  next();
-});
 
-const refreshAccessToken = asyncHandler(async (req, res, next) => {
+const refreshTokenHandler = asyncHandler(async (req, res, next) => {
   const { refreshToken } = req.cookies;
-  const IPAddress = req.ip;
-  const deviceInfo = req.get("User-Agent");
+
   if (!refreshToken) {
-    return next(new HttpError("Refresh token not provided", 401));
+    return next(new HttpError("No refresh token provided", 401));
   }
+
+  // Verify refresh token
   const hashedRefreshToken = crypto
     .createHash("sha256")
     .update(refreshToken)
     .digest("hex");
-  const storedToken = await RefreshToken.findOne({ token: hashedRefreshToken });
-  if (!storedToken) {
-    return next(new HttpError("Authentication failed", 401));
+
+  const storedRefreshToken = await RefreshToken.findOne({
+    token: hashedRefreshToken,
+    expiredAt: { $gt: new Date() },
+  });
+
+  if (!storedRefreshToken) {
+    return next(new HttpError("Invalid or expired refresh token", 401));
   }
-  if (storedToken.expiredAt < Date.now()) {
-    await RefreshToken.deleteOne({ _id: storedToken._id });
-    return next(new HttpError("Authentication failed", 403));
+
+  // Generate new access token
+  const accessToken = generateAccessToken(storedRefreshToken.user);
+
+  res.status(200).json({
+    status: "success",
+    accessToken,
+  });
+});
+
+const protect = asyncHandler(async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+    token = req.headers.authorization.split(" ")[1];
   }
+
+  if (!token) {
+    return next(new HttpError("You are not logged in", 401));
+  }
+
   try {
-    const decode = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
-    const user = await User.findById(decode.id);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).populate("role", "name");
+
     if (!user) {
-      return next(new HttpError("Authentication failed", 401));
+      return next(new HttpError("User no longer exists", 401));
     }
-    const newAccessToken = generateAccessToken(user._id);
-    const newRefreshToken = generateRefreshToken(user._id);
-    // hash refresh token.
-    const newHashRefreshToken = crypto
-      .createHash("sha256")
-      .update(newRefreshToken)
-      .digest("hex");
-    storedToken.token = newHashRefreshToken;
-    storedToken.expiredAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    storedToken.deviceInfo = deviceInfo;
-    storedToken.IPAddress = IPAddress;
-    await storedToken.save();
-    res.cookie("refreshToken", newRefreshToken, cookieOptions);
-    return res.status(200).json({
-      status: "success",
-      accessToken: newAccessToken,
-    });
+
+    req.user = user;
+    next();
   } catch (error) {
-    return next(new HttpError("Invalid token", 401));
+    if (error.name === "JsonWebTokenError") {
+      return next(new HttpError("Invalid token", 401));
+    }
+    if (error.name === "TokenExpiredError") {
+      return next(new HttpError("Token expired", 401));
+    }
+    next(error);
   }
 });
 
@@ -297,6 +290,7 @@ const logout = asyncHandler(async (req, res) => {
     message: "Logged out successfully",
   });
 });
+
 const forgotPassword = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
@@ -323,6 +317,7 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
     message: "Password reset link sent to your email",
   });
 });
+
 const resetPassword = asyncHandler(async (req, res, next) => {
   const { token } = req.params;
   const { password } = req.body;
@@ -380,7 +375,7 @@ export {
   requestNewOtp,
   login,
   protect,
-  refreshAccessToken,
+  refreshTokenHandler,
   restrictTo,
   logout,
   resetPassword,

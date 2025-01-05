@@ -1,9 +1,11 @@
+import { Sentry } from "./instrument.js";
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+
 import authRoute from "./src/routes/authRoute.js";
 import userRoute from "./src/routes/userRoute.js";
 import blogRoute from "./src/routes/blogRoute.js";
@@ -20,19 +22,24 @@ import { errorMiddleware } from "./src/utils/globalErrorHandler.js";
 import reserverRoute from "./src/routes/reserveSpotRoute.js";
 import swaggerSpec from "./src/swaggerOption.js";
 const app = express();
+Sentry.setupExpressErrorHandler(app);
 // enable trust proxy to get the client IP address.
 app.set("trust proxy", 1);
 app.use(helmet());
 // rate limiter.
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // IP may make 100 requests per windowMs,
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: "Too many requests, please try again later.",
 });
 app.use(limiter);
 app.use(
   cors({
-    origin: ["https://coworking-silk.vercel.app", "https://coworking-silk.vercel.app/"],
+    origin: [
+      "https://coworking-silk.vercel.app",
+      "https://coworking-silk.vercel.app/",
+      "http://localhost:5173",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
   })
@@ -59,4 +66,5 @@ app.use("/api/upload", uploadRouter);
 app.use("/api/gallery", galleryRouter);
 app.use("/api/reserveSpot", reserverRoute);
 app.use(errorMiddleware);
+
 export default app;

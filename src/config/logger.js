@@ -1,4 +1,8 @@
 import winston from "winston";
+import * as Sentry from "@sentry/node";
+import SentryTransport from "winston-transport-sentry-node";
+
+const SentryTransportInstance = SentryTransport.default || SentryTransport;
 
 const logger = winston.createLogger({
   level: "info",
@@ -10,6 +14,12 @@ const logger = winston.createLogger({
     new winston.transports.Console(),
     new winston.transports.File({ filename: "logs/error.log", level: "error" }),
     new winston.transports.File({ filename: "logs/combined.log" }),
+    new SentryTransportInstance({
+      sentry: {
+        dsn: process.env.SENTRY_DSN,
+      },
+      level: "error",
+    }),
   ],
 });
 
