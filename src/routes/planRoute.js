@@ -1,5 +1,5 @@
 import express from "express";
-import { protect, restrictTo } from "../controller/authController.js";
+import { restrictTo } from "../controller/authController.js";
 import validate from "../middleware/validationMiddleware.js";
 import { planSchema } from "../validation/validationSchema.js";
 import {
@@ -9,6 +9,7 @@ import {
   updatePlan,
   deletePlan,
 } from "../controller/planController.js";
+import { protect } from "../middleware/authMIddleware.js";
 
 const router = express.Router();
 

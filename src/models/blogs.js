@@ -46,6 +46,12 @@ const blogSchema = new Schema(
       maxlength: [500, "Summary can not be more than 200 characters"],
     },
     tags: [{ type: String }],
+    bookmarkedBy: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     featured: {
       type: Boolean,
       default: false,
@@ -121,12 +127,12 @@ const blogSchema = new Schema(
     },
   }
 );
-/// Pre-save middleware to generate slug
+// middleware to generate slug
 blogSchema.pre("save", async function (next) {
   if (this.isModified("title")) {
     // Generate slug from the title
     let slug = slugify(this.title, { lower: true, strict: true });
-    // Ensure slug is unique by appending a counter if necessary
+    // Ensure slug is unique by appending a counter
     let counter = 0;
     while (await Blog.exists({ slug })) {
       counter++;
@@ -153,7 +159,7 @@ blogSchema.pre("remove", async function (next) {
   next();
 });
 // INDXES
-blogSchema.index({ slug: 1, category: 1, publishedAt: -1 });
+blogSchema.index({ slug: 1, category: 1, publishedAt: -1, bookmarkedBy: 1 });
 
 const Blog = model("Blog", blogSchema);
 export default Blog;

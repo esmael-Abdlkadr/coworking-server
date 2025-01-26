@@ -1,5 +1,5 @@
 import express from "express";
-import { protect, restrictTo } from "../controller/authController.js";
+import { restrictTo } from "../controller/authController.js";
 import {
   reserveSpot,
   getReservations,
@@ -7,6 +7,7 @@ import {
   cancelReservation,
 } from "../controller/reserveSpotController.js";
 import { reservationRateLimiter } from "../middleware/rateLimiter.js";
+import { protect } from "../middleware/authMIddleware.js";
 
 const router = express.Router();
 

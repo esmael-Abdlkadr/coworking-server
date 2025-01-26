@@ -5,7 +5,6 @@ import {
   hashPassword,
   comparePassword,
 } from "../utils/authUtil.js";
-
 const UserRole = {
   Admin: "admin",
   user: "user",
@@ -42,7 +41,9 @@ const userScheme = new Schema(
     },
     password: {
       type: String,
-      required: [true, "Please provide your password"],
+      required: [function() {
+        return !this.googleId && !this.githubId;
+      }, "Please provide your password"],
       minlength: 4,
       select: false,
     },
@@ -64,7 +65,14 @@ const userScheme = new Schema(
       type: Boolean,
       default: true,
     },
-
+    bookmarkedBlogs: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Blog",
+      },
+    ],
+    googleId: String,
+    githubId: String,
     emailVerified: {
       type: Boolean,
       default: false,

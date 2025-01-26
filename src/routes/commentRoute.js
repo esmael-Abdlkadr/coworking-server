@@ -1,5 +1,4 @@
 import express from "express";
-import { protect } from "../controller/authController.js";
 import {
   addComment,
   getCommentByBlogId,
@@ -10,6 +9,7 @@ import {
   getNestedComments,
   getTotalCommentsForBlog,
 } from "../controller/commentController.js";
+import { protect } from "../middleware/authMIddleware.js";
 
 const router = express.Router();
 

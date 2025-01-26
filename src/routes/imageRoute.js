@@ -6,7 +6,8 @@ import {
   updateImage,
   uploadIMage,
 } from "../controller/ImageController.js";
-import { protect } from "../controller/authController.js";
+import { protect } from "../middleware/authMIddleware.js";
+
 const router = express.Router();
 router.route("/").get(getImages).post(protect, uploadIMage);
 router

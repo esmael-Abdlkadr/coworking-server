@@ -1,5 +1,5 @@
 import express from "express";
-import { protect, restrictTo } from "../controller/authController.js";
+import { restrictTo } from "../controller/authController.js";
 import {
   assignRoleToUser,
   confirmEmailChange,
@@ -11,9 +11,25 @@ import {
   requestEmailUpdate,
   updateMe,
 } from "../controller/userController.js";
+import { protect } from "../middleware/authMIddleware.js";
 
 const router = express.Router();
+router.patch("/updateMe", protect, updateMe);
+router.get("/me", protect, myInfo);
+router.patch("/deleteMe", protect, deleteme);
+router.get("/allUser", protect, getAllUser);
+router.get("/:id", protect, getUser);
+router.post("/requestEmailChange", requestEmailUpdate);
+router.get("/confirmEmailChange", confirmEmailChange);
+router.get("/userByEmail/:email", protect, getUserByEmail);
+router.patch(
+  "/:userId/role",
+  protect,
+  restrictTo("superAdmin"),
+  assignRoleToUser
+);
 
+export default router;
 /**
  * @swagger
  * tags:
@@ -215,20 +231,3 @@ const router = express.Router();
  *       404:
  *         description: User or role not found
  */
-
-router.patch("/updateMe", protect, updateMe);
-router.get("/me", protect, myInfo);
-router.patch("/deleteMe", protect, deleteme);
-router.get("/allUser", protect, getAllUser);
-router.get("/:id", protect, getUser);
-router.post("/requestEmailChange", requestEmailUpdate);
-router.get("/confirmEmailChange", confirmEmailChange);
-router.get("/userByEmail/:email", protect, getUserByEmail);
-router.patch(
-  "/:userId/role",
-  protect,
-  restrictTo("superAdmin"),
-  assignRoleToUser
-);
-
-export default router;

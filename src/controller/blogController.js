@@ -59,8 +59,11 @@ const getAllBlogs = asyncHandler(async (req, res, next) => {
     .populate("author", "firstName lastName");
   const totalBlog = await Blog.countDocuments(query);
   res.status(200).json({
-    status: "sucess",
-    data: blogs.map((blog) => blog.toJSON()),
+    status: "success",
+    data: blogs.map((blog) => ({
+      ...blog.toJSON(),
+      totalBookmarks: blog.bookmarkedBy.length,
+    })),
     pagination: {
       totalBlog,
       currentPage: Number(page),
@@ -84,7 +87,10 @@ const getBlogBySlug = asyncHandler(async (req, res, next) => {
   }
   res.status(200).json({
     status: "success",
-    data: blog.toJSON(),
+    data: {
+      ...blog.toJSON(),
+      totalBookmarks: blog.bookmarkedBy.length,
+    },
   });
 });
 const incrementView = asyncHandler(async (req, res, next) => {
@@ -118,6 +124,19 @@ const incrementView = asyncHandler(async (req, res, next) => {
     data: { views: blog.views },
   });
 });
+const recentPosts = asyncHandler(async (req, res, next) => {
+  const { limit = 2 } = req.query;
+  const recentBlogs = await Blog.find({})
+    .sort({ publishedAt: -1 })
+    .limit(Number(limit))
+    .select("title createdAt slug image");
+  // .populate("author", "firstName lastName");
+
+  res.status(200).json({
+    status: "success",
+    data: recentBlogs.map((blog) => blog.toJSON()),
+  });
+});
 
 export {
   createBlog,
@@ -126,4 +145,5 @@ export {
   getAllBlogs,
   getBlogBySlug,
   incrementView,
+  recentPosts,
 };

@@ -3,8 +3,7 @@ import {
   signUp,
   login,
   verifyOTP,
-  protect,
- refreshTokenHandler,
+  refreshTokenHandler,
   logout,
   requestNewOtp,
   forgotPassword,
@@ -17,8 +16,78 @@ import {
   optSchema,
 } from "../validation/validationSchema.js";
 import validate from "../middleware/validationMiddleware.js";
-
+import { protect } from "../middleware/authMIddleware.js";
+import passport from "passport";
+import { generateAccessToken } from "../utils/tokenUtil.js";
 const router = express.Router();
+// Google Authentication
+router.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    session: false,
+  })
+);
+
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: `${process.env.CLIENT_URL}/auth?error=GoogleAuthFailed`,
+  }),
+  async (req, res) => {
+    try {
+      const accessToken = await generateAccessToken(req.user._id);
+      
+      // Redirect back to the client with the token and provider
+      res.redirect(
+        `${process.env.CLIENT_URL}/auth/oauth/callback?token=${accessToken}&provider=google`
+      );
+    } catch (error) {
+      console.error("Google callback error:", error);
+      res.redirect(
+        `${process.env.CLIENT_URL}/auth?error=${encodeURIComponent(
+          error.message
+        )}`
+      );
+    }
+  }
+);
+
+// GitHub Authentication
+router.get(
+  "/github",
+  passport.authenticate("github", {
+    scope: ["user:email"],
+    session: false,
+  })
+);
+
+router.get(
+  "/github/callback",
+  passport.authenticate("github", {
+    session: false,
+    failureRedirect: `${process.env.CLIENT_URL}/auth?error=GitHubAuthFailed`,
+  }),
+  async (req, res) => {
+    try {
+      const accessToken = await generateAccessToken(req.user);
+      
+      // Redirect back to the client with the token and provider
+      res.redirect(
+        `${process.env.CLIENT_URL}/auth/oauth/callback?token=${accessToken}&provider=github`
+      );
+    } catch (error) {
+      console.error("GitHub callback error:", error);
+      res.redirect(
+        `${process.env.CLIENT_URL}/auth?error=${encodeURIComponent(
+          error.message
+        )}`
+      );
+    }
+  }
+);
+
 router.post("/signup", validate(signupSchema), signUp);
 router.post("/login", validate(loginSchema), login);
 router.post("/verify", validate(optSchema), verifyOTP);
@@ -26,7 +95,7 @@ router.post("/requestNewOtp", requestNewOtp);
 router.post("/forgotPassword", forgotPassword);
 router.post("/resetPassword/:token", resetPassword);
 router.patch("/changePassword", protect, ChangePassword);
-router.post("/refreshAccessToken", protect, refreshTokenHandler);
+router.post("/refreshAccessToken", refreshTokenHandler);
 router.post("/logout", logout);
 
 export default router;

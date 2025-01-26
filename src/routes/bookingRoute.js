@@ -1,5 +1,5 @@
 import express from "express";
-import { protect, restrictTo } from "../controller/authController.js";
+import { restrictTo } from "../controller/authController.js";
 import {
   cancelBooking,
   createBooking,
@@ -7,6 +7,7 @@ import {
   getBooking,
   updateBooking,
 } from "../controller/bookingController.js";
+import { protect } from "../middleware/authMIddleware.js";
 const router = express.Router();
 router
   .route("/")

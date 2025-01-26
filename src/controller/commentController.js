@@ -16,10 +16,8 @@ const addComment = asyncHandler(async (req, res, next) => {
 
   // Populate user details
   await savedComment.populate("user", "firstName lastName");
-
   blog.comments.push(savedComment._id);
   await blog.save();
-
   // Emit the populated comment to clients
   const io = getSocketInstance();
   io.to(`blog-${req.params.blogId}`).emit("newComment", {

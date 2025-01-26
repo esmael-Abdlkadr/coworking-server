@@ -1,5 +1,5 @@
 import express from "express";
-import { protect, restrictTo } from "../controller/authController.js";
+import { restrictTo } from "../controller/authController.js";
 import {
   createEvent,
   getAllEvents,
@@ -7,6 +7,7 @@ import {
   updateEvent,
   deleteEvent,
 } from "../controller/eventController.js";
+import { protect } from "../middleware/authMIddleware.js";
 const router = express.Router();
 router.post("/", protect, restrictTo("admin", "superAdmin"), createEvent);
 router.get("/", getAllEvents);

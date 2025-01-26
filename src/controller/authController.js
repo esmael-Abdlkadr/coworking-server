@@ -6,6 +6,7 @@ import asyncHandler from "../utils/asycnHandler.js";
 import {
   generateAccessToken,
   generateRefreshToken,
+  verifyToken,
 } from "../utils/tokenUtil.js";
 import { User } from "../models/users.js";
 import HttpError from "../utils/HttpError.js";
@@ -19,6 +20,7 @@ const cookieOptions = {
   secure: process.env.NODE_ENV === "production",
   sameSite: "strict",
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  path: "/",
 };
 
 const sendToken = async (user, res, deviceInfo, IPAddress) => {
@@ -29,6 +31,8 @@ const sendToken = async (user, res, deviceInfo, IPAddress) => {
     .createHash("sha256")
     .update(refreshToken)
     .digest("hex");
+  // remove old refresh token for the device.
+  await RefreshToken.deleteMany({ user: user._id, deviceInfo });
   await RefreshToken.create({
     token: hashRefreshToken,
     user: user._id,
@@ -205,61 +209,36 @@ const refreshTokenHandler = asyncHandler(async (req, res, next) => {
   if (!refreshToken) {
     return next(new HttpError("No refresh token provided", 401));
   }
-
   // Verify refresh token
-  const hashedRefreshToken = crypto
+  const decoded = verifyToken(refreshToken, process.env.REFRESH_SECRET);
+
+  // find stored refresh token
+  const hashedToken = crypto
     .createHash("sha256")
     .update(refreshToken)
     .digest("hex");
 
-  const storedRefreshToken = await RefreshToken.findOne({
-    token: hashedRefreshToken,
-    expiredAt: { $gt: new Date() },
+  const storedToken = await RefreshToken.findOne({
+    token: hashedToken,
+    user: decoded.id,
   });
 
-  if (!storedRefreshToken) {
+  if (!storedToken) {
     return next(new HttpError("Invalid or expired refresh token", 401));
+  }
+  // Check if user still exists
+  const user = await User.findById(decoded.id);
+  if (!user) {
+    return next(new HttpError("User no longer exists", 401));
   }
 
   // Generate new access token
-  const accessToken = generateAccessToken(storedRefreshToken.user);
+  const accessToken = generateAccessToken(decoded.id);
 
   res.status(200).json({
     status: "success",
     accessToken,
   });
-});
-
-const protect = asyncHandler(async (req, res, next) => {
-  let token;
-
-  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
-    token = req.headers.authorization.split(" ")[1];
-  }
-
-  if (!token) {
-    return next(new HttpError("You are not logged in", 401));
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).populate("role", "name");
-
-    if (!user) {
-      return next(new HttpError("User no longer exists", 401));
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    if (error.name === "JsonWebTokenError") {
-      return next(new HttpError("Invalid token", 401));
-    }
-    if (error.name === "TokenExpiredError") {
-      return next(new HttpError("Token expired", 401));
-    }
-    next(error);
-  }
 });
 
 const restrictTo = function (...roles) {
@@ -277,11 +256,11 @@ const restrictTo = function (...roles) {
 const logout = asyncHandler(async (req, res) => {
   const { refreshToken } = req.cookies;
   if (refreshToken) {
-    const hashedRefreshToken = crypto
+    const hashedToken = crypto
       .createHash("sha256")
       .update(refreshToken)
       .digest("hex");
-    await RefreshToken.deleteOne({ token: hashedRefreshToken });
+    await RefreshToken.deleteOne({ token: hashedToken });
     res.clearCookie("refreshToken");
   }
 
@@ -374,7 +353,6 @@ export {
   verifyOTP,
   requestNewOtp,
   login,
-  protect,
   refreshTokenHandler,
   restrictTo,
   logout,

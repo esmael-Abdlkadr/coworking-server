@@ -1,5 +1,4 @@
 import express from "express";
-import { protect } from "../controller/authController.js";
 import {
   addLike,
   addDislike,
@@ -12,7 +11,22 @@ import {
   commentReactions,
   removeCommentReaction,
 } from "../controller/likeController.js";
+import { protect } from "../middleware/authMIddleware.js";
 const router = express.Router();
+router.route("/").post(protect, addLike);
+router.route("/:id").delete(protect, removReaction);
+router.route("/dislike").post(protect, addDislike);
+router.route("/anonymous").post(addReactionForAnonymous);
+router.route("/stats").get(getReactionStats);
+router.route("/blog/:id").get(getBlogWithReactions);
+router.route("/blog/:blogId/reactions").get(getReactionsForBlog);
+router.route("/blog/:blogId/user-reaction").get(protect, getUserReactionOnBlog);
+router
+  .route("/comment/:commentId")
+  .post(protect, commentReactions)
+  .delete(protect, removeCommentReaction);
+
+export default router;
 
 /**
  * @swagger
@@ -206,18 +220,3 @@ const router = express.Router();
  *       404:
  *         description: Reaction not found
  */
-
-router.route("/").post(protect, addLike);
-router.route("/:id").delete(protect, removReaction);
-router.route("/dislike").post(protect, addDislike);
-router.route("/anonymous").post(addReactionForAnonymous);
-router.route("/stats").get(getReactionStats);
-router.route("/blog/:id").get(getBlogWithReactions);
-router.route("/blog/:blogId/reactions").get(getReactionsForBlog);
-router.route("/blog/:blogId/user-reaction").get(protect, getUserReactionOnBlog);
-router
-  .route("/comment/:commentId")
-  .post(protect, commentReactions)
-  .delete(protect, removeCommentReaction);
-
-export default router;
