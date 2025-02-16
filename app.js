@@ -7,6 +7,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import passport from "passport";
 import session from "express-session";
+import dashbaordRouter from "./src/routes/dashboardRoute.js";
 import authRoute from "./src/routes/authRoute.js";
 import userRoute from "./src/routes/userRoute.js";
 import blogRoute from "./src/routes/blogRoute.js";
@@ -97,6 +98,7 @@ app.use("/api/admin", rbacRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/gallery", galleryRouter);
 app.use("/api/reserveSpot", reserverRoute);
+app.use("/api/dashboard", dashbaordRouter);
 app.use(errorMiddleware);
 
 export default app;
